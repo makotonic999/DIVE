@@ -1,0 +1,67 @@
+---
+/**
+ * src/pages/chapters/[slug].astro
+ * 各章の動的ルート。src/content/chapters/ 配下のMDXファイルに対応するページを生成する。
+ */
+import BookLayout from '../../layouts/BookLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const chapters = await getCollection('chapters');
+  return chapters.map((chapter) => ({
+    params: { slug: chapter.slug },
+    props: { chapter },
+  }));
+}
+
+const { chapter } = Astro.props;
+const { Content } = await render(chapter);
+
+const partLabel = `Part ${chapter.data.part}: ${chapter.data.partTitle}`;
+---
+
+<BookLayout
+  title={chapter.data.title}
+  description={chapter.data.description}
+  part={partLabel}
+  chapter={chapter.data.chapter}
+  publishedAt={chapter.data.publishedAt}
+>
+  <Content />
+
+  <!-- 章ナビゲーション -->
+  <nav
+    style="
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid #E8E3D8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    "
+  >
+    <a
+      href="/"
+      style="
+        font-family: 'Noto Sans JP', sans-serif;
+        font-size: 0.875rem;
+        color: #8B6914;
+        text-decoration: none;
+      "
+    >
+      ← 目次へ戻る
+    </a>
+
+    {chapter.data.readingTimeMinutes && (
+      <span
+        style="
+          font-family: 'Noto Sans JP', sans-serif;
+          font-size: 0.75rem;
+          color: #888888;
+        "
+      >
+        読了時間の目安: 約{chapter.data.readingTimeMinutes}分
+      </span>
+    )}
+  </nav>
+</BookLayout>
