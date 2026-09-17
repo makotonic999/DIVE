@@ -1,0 +1,40 @@
+# ============================================================
+# DIVE — .gitignore
+# ============================================================
+
+# ----- Node.js -----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# ----- Astro -----
+dist/
+.astro/
+
+# ----- Terraform -----
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfstate.d/
+*.tfvars
+!terraform/terraform.tfvars.example
+
+# ----- OS -----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----- Editor -----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ----- Environment -----
+.env
+.env.local
+.env.*.local
