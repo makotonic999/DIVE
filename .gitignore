@@ -15,11 +15,12 @@ dist/
 .astro/
 
 # ----- Terraform -----
-terraform/.terraform/
-terraform/.terraform.lock.hcl
-terraform/terraform.tfstate
-terraform/terraform.tfstate.backup
-terraform/terraform.tfstate.d/
+# 全階層に効くようにする（terraform/ と terraform/bootstrap/ の両方をカバー）
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/terraform.tfstate.d/
 *.tfvars
 !terraform/terraform.tfvars.example
 
