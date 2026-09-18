@@ -123,14 +123,8 @@ variable "dev_account_profile" {
 }
 
 ###############################################################################
-# CI/CD (GitHub Actions OIDC) 設定
+# クロスアカウント（管理アカウントのRoute53操作）設定
 ###############################################################################
-
-variable "github_repository" {
-  description = "GitHub リポジトリ（owner/repo 形式）。OIDCの信頼条件に使用。"
-  type        = string
-  default     = "makotonic999/DIVE"
-}
 
 variable "route53_cross_account_role_arn" {
   description = "管理アカウントのRoute53操作用クロスアカウントロールARN。管理アカウントのDNSを操作するために assume する。"
