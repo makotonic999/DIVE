@@ -51,17 +51,18 @@ variable "cloudfront_default_root_object" {
 }
 
 variable "cloudfront_custom_error_responses" {
-  description = "CloudFrontのカスタムエラーレスポンス設定。SPAルーティング対応のため 403/404 → index.html にリダイレクト。"
+  description = "CloudFrontのカスタムエラーレスポンス設定。静的MPAのため 403/404 は 404ページを返す（SPA用のindex.htmlフォールバックはしない）。"
   type = list(object({
     error_code         = number
     response_code      = number
     response_page_path = string
   }))
   default = [
+    # OAC経由のS3は存在しないキーに対して403を返すことがあるため、404ページにマップする
     {
       error_code         = 403
-      response_code      = 200
-      response_page_path = "/index.html"
+      response_code      = 404
+      response_page_path = "/404.html"
     },
     {
       error_code         = 404
@@ -85,4 +86,38 @@ variable "tags" {
     ManagedBy   = "Terraform"
     Description = "Deep Interactive Virtual Encyclopedia"
   }
+}
+
+###############################################################################
+# カスタムドメイン設定（v2: dev account 用）
+###############################################################################
+
+variable "domain_name" {
+  description = "CloudFrontの公開ドメイン名（例: dive.okada-chikuro-kougyousyo.com）。"
+  type        = string
+  default     = "dive.okada-chikuro-kougyousyo.com"
+}
+
+variable "acm_certificate_arn" {
+  description = "CloudFrontに紐付けるACM証明書のARN（us-east-1に存在する必要があり）。ワイルドカード証明書を使用。"
+  type        = string
+  default     = "arn:aws:acm:us-east-1:532970129307:certificate/8c82491f-5436-450b-b7b4-626f7a1d9a7b"
+}
+
+variable "route53_zone_id" {
+  description = "Route53 ホストゾーンID（親ドメイン okada-chikuro-kougyousyo.com を管理するゾーン）。管理アカウント側にあります。"
+  type        = string
+  default     = "Z028752216DTISGOI1QOA"
+}
+
+variable "management_account_profile" {
+  description = "管理アカウント用のAWS CLIプロファイル（Identity Center経由）。DNS操作に使用。"
+  type        = string
+  default     = "management"
+}
+
+variable "dev_account_profile" {
+  description = "devアカウント用のAWS CLIプロファイル（Identity Center経由）。S3・CloudFront・証明書参照に使用。"
+  type        = string
+  default     = "dev"
 }

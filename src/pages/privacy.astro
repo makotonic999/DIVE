@@ -1,0 +1,128 @@
+---
+/**
+ * src/pages/privacy.astro
+ * プライバシーポリシー — Google AdSense審査およびアクセス解析の要件を満たすために設置。
+ * 広告配信を有効化する前段階の下地。実際の広告タグは審査通過後に挿入する。
+ */
+import BookLayout from '../layouts/BookLayout.astro';
+
+const updatedAt = '2026年9月18日';
+---
+
+<BookLayout title="プライバシーポリシー" description="DIVEのプライバシーポリシー。個人情報の取り扱い、Cookie、広告配信、アクセス解析について。">
+  <h1
+    style="
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #2C2C2C;
+      margin: 0 0 0.5rem;
+      line-height: 1.3;
+    "
+  >
+    プライバシーポリシー
+  </h1>
+  <p
+    style="
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.8125rem;
+      color: #888888;
+      margin: 0 0 2.5rem;
+    "
+  >
+    最終更新日: {updatedAt}
+  </p>
+
+  <div class="prose prose-lg max-w-none">
+    <p>
+      DIVE（以下「当サイト」）は、閲覧者のプライバシーを尊重し、個人情報および
+      閲覧情報の適切な取り扱いに努めます。本ポリシーは、当サイトにおける情報の
+      収集・利用・管理の方針を定めるものです。
+    </p>
+
+    <h2>1. 収集する情報</h2>
+    <p>
+      当サイトは静的なウェブサイトであり、閲覧のみを目的とする場合、氏名や
+      メールアドレスなどの個人を直接特定する情報を入力する必要はありません。
+      一方で、アクセス解析や広告配信のために、Cookieやアクセスログ
+      （IPアドレス、ブラウザの種類、参照元、閲覧ページ、閲覧日時など）を
+      自動的に取得する場合があります。
+    </p>
+
+    <h2>2. Cookieの利用について</h2>
+    <p>
+      当サイトでは、利用状況の把握や広告配信の最適化のためにCookieを使用する
+      ことがあります。Cookieは閲覧者のブラウザに保存される小さなテキストデータで、
+      個人を直接特定するものではありません。閲覧者はブラウザの設定により、
+      Cookieの受け入れを拒否したり、保存されたCookieを削除したりできます。
+      ただし、その場合、当サイトの一部機能が正しく動作しない可能性があります。
+    </p>
+
+    <h2>3. 広告配信について</h2>
+    <p>
+      当サイトでは、将来的に第三者配信の広告サービス（Google AdSense等）を
+      利用する予定があります。これらの広告配信事業者は、閲覧者の興味に応じた
+      広告を表示するため、当サイトや他サイトへのアクセスに関する情報
+      「Cookie（氏名、住所、メールアドレス、電話番号は含まれません）」を
+      使用することがあります。
+    </p>
+    <p>
+      Googleを含む第三者配信事業者によるCookieの使用や、パーソナライズ広告の
+      無効化については、Googleの
+      <a href="https://policies.google.com/technologies/ads?hl=ja" target="_blank" rel="noopener noreferrer">広告に関するポリシー</a>
+      および
+      <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer">広告設定</a>
+      のページで確認・設定できます。
+    </p>
+
+    <h2>4. アクセス解析ツールについて</h2>
+    <p>
+      当サイトでは、利用状況の分析のためにアクセス解析ツールを利用する場合が
+      あります。これらのツールはCookieを使用してトラフィックデータを収集しますが、
+      このデータは匿名で収集されており、個人を特定するものではありません。
+    </p>
+
+    <h2>5. 免責事項</h2>
+    <p>
+      当サイトのコンテンツは、正確性を期して作成していますが、その内容の完全性・
+      正確性・有用性を保証するものではありません。当サイトの情報を用いて行う
+      一切の行為について、当サイトは責任を負いかねます。また、当サイトからリンク
+      された外部サイトの内容についても責任を負いません。
+    </p>
+
+    <h2>6. プライバシーポリシーの変更</h2>
+    <p>
+      当サイトは、法令の変更やサービス内容の変更に応じて、本ポリシーを予告なく
+      改定することがあります。改定後のポリシーは、当ページに掲載した時点から
+      効力を生じるものとします。
+    </p>
+
+    <h2>7. お問い合わせ</h2>
+    <p>
+      本ポリシーに関するお問い合わせは、運営者のポートフォリオサイト
+      （<a href="https://okada-chikuro-kougyousyo.com" target="_blank" rel="noopener noreferrer">okada-chikuro-kougyousyo.com</a>）
+      の問い合わせフォームよりご連絡ください。
+    </p>
+  </div>
+
+  <!-- フッターナビ -->
+  <nav
+    style="
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid #E8E3D8;
+    "
+  >
+    <a
+      href="/"
+      style="
+        font-family: 'Noto Sans JP', sans-serif;
+        font-size: 0.875rem;
+        color: #8B6914;
+        text-decoration: none;
+      "
+    >
+      ← 目次へ戻る
+    </a>
+  </nav>
+</BookLayout>

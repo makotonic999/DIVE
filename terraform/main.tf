@@ -22,6 +22,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.40"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
   # リモートステート管理を使う場合はこのブロックを有効化して設定する
@@ -32,8 +36,14 @@ terraform {
   # }
 }
 
+###############################################################################
+# Provider: dev (default) - devアカウント用
+# S3、CloudFront、OAC などのコンピュートリソースをここで作成
+# 証明書(ACM)もこのアカウントに存在するため、プロファイルを明示的に固定する
+###############################################################################
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_region
+  profile = var.dev_account_profile
 
   default_tags {
     tags = merge(var.tags, {
@@ -43,15 +53,50 @@ provider "aws" {
 }
 
 ###############################################################################
+# Provider: management (alias) - 管理アカウント用
+# DNSレコード（Route53）をクロスアカウントで作成
+# Identity Center プロファイル "management" を使用
+###############################################################################
+provider "aws" {
+  alias   = "management"
+  region  = var.aws_region
+  profile = var.management_account_profile
+
+  default_tags {
+    tags = merge(var.tags, {
+      Environment = var.environment
+      Purpose     = "DNS Management"
+    })
+  }
+}
+
+###############################################################################
 # ローカル変数
 ###############################################################################
 
 locals {
-  # バケット名: 指定がなければ "${project_name}-${environment}-site" を使用
-  bucket_name = var.s3_bucket_name != "" ? var.s3_bucket_name : "${var.project_name}-${var.environment}-site"
+  # 名前衝突を避けるためのランダムサフィックス（16進8文字）。
+  # S3バケット名はグローバル一意、OAC名はアカウント内一意である必要があるため、
+  # 作り直し時の "AlreadyExists" 衝突を根絶する目的で付与する。
+  name_suffix = random_id.suffix.hex
 
-  # OACの識別名
-  oac_name = "${var.project_name}-${var.environment}-oac"
+  # バケット名: 指定がなければ "${project_name}-${environment}-site-${suffix}" を使用
+  bucket_name = var.s3_bucket_name != "" ? var.s3_bucket_name : "${var.project_name}-${var.environment}-site-${local.name_suffix}"
+
+  # OACの識別名（サフィックス付きで一意化）
+  oac_name = "${var.project_name}-${var.environment}-oac-${local.name_suffix}"
+}
+
+# リソース名の一意化に使うランダムID。
+# keepers を固定しているため、一度生成されると apply をまたいで安定する
+# （＝毎回変わって作り直しになることはない）。
+resource "random_id" "suffix" {
+  byte_length = 4
+
+  keepers = {
+    project     = var.project_name
+    environment = var.environment
+  }
 }
 
 ###############################################################################
@@ -130,6 +175,9 @@ resource "aws_cloudfront_distribution" "site" {
   price_class         = var.cloudfront_price_class
   comment             = "DIVE static site distribution (${var.environment})"
 
+  # カスタムドメイン（CNAME）: dive.okada-chikuro-kougyousyo.com
+  aliases = [var.domain_name]
+
   # オリジン: S3バケット（OAC経由）
   origin {
     origin_id                = "s3-${local.bucket_name}"
@@ -152,6 +200,12 @@ resource "aws_cloudfront_distribution" "site" {
 
     # マネージドオリジンリクエストポリシー: CORS-S3Origin
     origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
+
+    # サブディレクトリのindex解決を行うCloudFront Function
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.rewrite_index.arn
+    }
   }
 
   # カスタムエラーレスポンス（404.htmlのフォールバックなど）
@@ -172,11 +226,12 @@ resource "aws_cloudfront_distribution" "site" {
     }
   }
 
-  # SSL/TLS証明書: CloudFrontデフォルト証明書を使用
-  # カスタムドメインを使う場合は aws_acm_certificate を追加して viewer_certificate を変更する
+  # SSL/TLS証明書: dev既存のACMワイルドカード証明書（*.okada-chikuro-kougyousyo.com）を使用
+  # 証明書は us-east-1 に存在する必要がある（CloudFront要件）
   viewer_certificate {
-    cloudfront_default_certificate = true
-    minimum_protocol_version       = "TLSv1.2_2021"
+    acm_certificate_arn      = var.acm_certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   # CloudFrontアクセスログ（有効化する場合）
