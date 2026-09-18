@@ -28,22 +28,30 @@ terraform {
     }
   }
 
-  # リモートステート管理を使う場合はこのブロックを有効化して設定する
-  # backend "s3" {
-  #   bucket = "your-terraform-state-bucket"
-  #   key    = "dive/production/terraform.tfstate"
-  #   region = "ap-northeast-1"
-  # }
+  # リモートステート: 既存の共有ステートバケットを DIVE 専用キーで使用。
+  # use_lockfile による S3 ネイティブロックで同時実行を防止。
+  # profile はローカル実行用。CI(GitHub Actions)では環境変数/OIDC認証が優先される。
+  backend "s3" {
+    bucket       = "okadachikuro-dev-tfstate"
+    key          = "dive/terraform.tfstate"
+    region       = "ap-northeast-1"
+    use_lockfile = true
+    profile      = "dev"
+  }
 }
 
 ###############################################################################
 # Provider: dev (default) - devアカウント用
 # S3、CloudFront、OAC などのコンピュートリソースをここで作成
-# 証明書(ACM)もこのアカウントに存在するため、プロファイルを明示的に固定する
+# 証明書(ACM)もこのアカウントに存在する。
+#
+# ローカル実行: var.dev_account_profile（"dev"）でIdentity Center認証を使う
+# CI実行(GitHub Actions): profileを空にし、OIDCで取得した認証情報を使う
+#   （dev_account_profile = "" を指定 or 環境変数で上書き）
 ###############################################################################
 provider "aws" {
   region  = var.aws_region
-  profile = var.dev_account_profile
+  profile = var.dev_account_profile != "" ? var.dev_account_profile : null
 
   default_tags {
     tags = merge(var.tags, {
@@ -54,13 +62,19 @@ provider "aws" {
 
 ###############################################################################
 # Provider: management (alias) - 管理アカウント用
-# DNSレコード（Route53）をクロスアカウントで作成
-# Identity Center プロファイル "management" を使用
+# DNSレコード（Route53）をクロスアカウントで作成。
+# デフォルトプロバイダ(dev)の認証から、管理アカウントのRoute53ロールを assume する。
+# これによりローカル（devプロファイル）でもCI（OIDCロール）でも同一構成で動作する。
 ###############################################################################
 provider "aws" {
   alias   = "management"
   region  = var.aws_region
-  profile = var.management_account_profile
+  profile = var.dev_account_profile != "" ? var.dev_account_profile : null
+
+  assume_role {
+    role_arn     = var.route53_cross_account_role_arn
+    session_name = "terraform-dive-route53"
+  }
 
   default_tags {
     tags = merge(var.tags, {

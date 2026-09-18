@@ -1,0 +1,99 @@
+name: Deploy DIVE
+
+# main への push でインフラ(Terraform)適用とコンテンツデプロイを実行する。
+# 認証は OIDC（シークレットレス）。DIVE専用IAMロールを引き受ける。
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'terraform/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write   # OIDC トークン取得に必要
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ----- Terraform: インフラ適用 -----
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Terraform Init
+        working-directory: terraform
+        # CIではローカルプロファイルを使わないため、profile指定を無効化して
+        # OIDCで取得したアンビエント認証情報を使用する。
+        run: terraform init -input=false -backend-config="profile="
+
+      - name: Terraform Apply
+        working-directory: terraform
+        # CI実行: dev_account_profile を空にしてアンビエント認証(OIDC)を使う。
+        # management プロバイダは assume_role で管理アカウントのRoute53ロールを引き受ける。
+        run: terraform apply -input=false -auto-approve -var="dev_account_profile="
+
+      # ----- Terraform output からデプロイ先を取得 -----
+      - name: Get Terraform Outputs
+        id: tf
+        working-directory: terraform
+        run: |
+          echo "bucket=$(terraform output -raw s3_bucket_name)" >> "$GITHUB_OUTPUT"
+          echo "distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> "$GITHUB_OUTPUT"
+
+      # ----- Astro ビルド -----
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # ----- S3 へデプロイ -----
+      - name: Deploy static assets to S3 (long cache)
+        run: |
+          aws s3 sync ./dist "s3://${{ steps.tf.outputs.bucket }}" --delete \
+            --cache-control "public,max-age=31536000,immutable" \
+            --exclude "index.html"
+
+      - name: Upload index.html (no cache)
+        run: |
+          aws s3 cp ./dist/index.html "s3://${{ steps.tf.outputs.bucket }}/index.html" \
+            --cache-control "no-cache,no-store,must-revalidate" \
+            --content-type "text/html"
+
+      # ----- CloudFront 無効化 -----
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.tf.outputs.distribution_id }}" \
+            --paths "/*"
+
+      - name: Done
+        run: echo "Deployed to https://dive.okada-chikuro-kougyousyo.com"
