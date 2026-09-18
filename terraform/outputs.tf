@@ -72,7 +72,12 @@ output "cloudfront_oac_id" {
 ###############################################################################
 
 output "site_url" {
-  description = "DIVEサイトにアクセスするためのURL（CloudFrontデフォルトドメイン）。"
+  description = "DIVEサイトにアクセスするためのURL（カスタムドメイン）。"
+  value       = "https://${var.domain_name}"
+}
+
+output "cloudfront_default_url" {
+  description = "CloudFrontデフォルトドメインのURL。DNS伝播前の疎通確認や、カスタムドメイン設定のトラブルシュートに使用。"
   value       = "https://${aws_cloudfront_distribution.site.domain_name}"
 }
 
