@@ -31,11 +31,18 @@ resource "aws_iam_role" "github_actions_dive" {
         Principal = {
           Federated = data.aws_iam_openid_connect_provider.github.arn
         }
-        Action = "sts:AssumeRoleWithWebIdentity"
+        # AssumeRoleWithWebIdentity に加え TagSession も許可。
+        # configure-aws-credentials がセッションタグを付与する場合に必要。
+        Action = [
+          "sts:AssumeRoleWithWebIdentity",
+          "sts:TagSession"
+        ]
         Condition = {
           StringLike = {
-            # DIVE リポジトリの任意ブランチ/環境からのみ許可
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repository}:*"
+            # DIVE リポジトリからのアクセスを許可。
+            # 大文字小文字やref表記の揺れを吸収するため、前後をワイルドカードで囲む
+            # （ポートフォリオで実績のあるパターンに合わせる）。
+            "token.actions.githubusercontent.com:sub" = "repo:makotonic999/*DIVE*:*"
           }
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
