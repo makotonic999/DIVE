@@ -35,6 +35,10 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          # セッションタグ(sts:TagSession)を付与しない。
+          # これを付けると信頼ポリシーに sts:TagSession 許可が必要になり
+          # "Not authorized to perform sts:AssumeRoleWithWebIdentity" の一因になる。
+          role-skip-session-tagging: true
 
       # ----- Terraform: インフラ適用 -----
       - name: Setup Terraform
