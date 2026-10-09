@@ -145,7 +145,7 @@ resource "aws_iam_role_policy" "github_actions_dive" {
         Sid      = "AssumeRoute53CrossAccount"
         Effect   = "Allow"
         Action   = "sts:AssumeRole"
-        Resource = var.route53_cross_account_role_arn
+        Resource = "arn:aws:iam::${var.dns_account_id}:role/TerraformRoute53CrossAccountRole"
       }
     ]
   })
