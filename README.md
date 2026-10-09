@@ -46,6 +46,7 @@
 ### Terraform運用
 - ステートは **S3バックエンド**（ネイティブロックによる排他制御）で管理。
 - リソース名の衝突を防ぐ **ランダムサフィックス**、providerのプロファイル明示によるアカウント誤操作防止など、再現性と安全性を重視。
+- アカウントIDや証明書ARNなどの **機密値はコミットせず `terraform.tfvars` で渡す**。`terraform/terraform.tfvars.example` をコピー（`cp terraform.tfvars.example terraform.tfvars`）して実値に書き換える（`terraform.tfvars` は `.gitignore` 済み）。
 
 ---
 
