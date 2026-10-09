@@ -99,9 +99,8 @@ variable "domain_name" {
 }
 
 variable "acm_certificate_arn" {
-  description = "CloudFrontに紐付けるACM証明書のARN（us-east-1に存在する必要があり）。ワイルドカード証明書を使用。"
+  description = "CloudFrontに紐付けるACM証明書のARN（us-east-1）。実値は terraform.tfvars で渡す。"
   type        = string
-  default     = "arn:aws:acm:us-east-1:532970129307:certificate/8c82491f-5436-450b-b7b4-626f7a1d9a7b"
 }
 
 variable "route53_zone_id" {
@@ -126,8 +125,7 @@ variable "dev_account_profile" {
 # クロスアカウント（管理アカウントのRoute53操作）設定
 ###############################################################################
 
-variable "route53_cross_account_role_arn" {
-  description = "管理アカウントのRoute53操作用クロスアカウントロールARN。管理アカウントのDNSを操作するために assume する。"
+variable "dns_account_id" {
+  description = "Route53 ホストゾーンを管理する AWS アカウントID（12桁）。実値は terraform.tfvars で渡す。"
   type        = string
-  default     = "arn:aws:iam::761018859875:role/TerraformRoute53CrossAccountRole"
 }

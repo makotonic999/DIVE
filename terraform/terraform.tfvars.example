@@ -1,0 +1,5 @@
+# terraform.tfvars.example — 実値は含めない。
+# 使い方: cp terraform.tfvars.example terraform.tfvars して実値に書き換える（tfvars は .gitignore 済み）
+dns_account_id      = "222222222222"
+acm_certificate_arn = "arn:aws:acm:us-east-1:111111111111:certificate/00000000-0000-0000-0000-000000000000"
+# bootstrap を実行する場合は terraform/bootstrap/ でも dns_account_id を指定する
