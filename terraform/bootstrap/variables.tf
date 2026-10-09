@@ -15,8 +15,7 @@ variable "dev_account_profile" {
   default     = "dev"
 }
 
-variable "route53_cross_account_role_arn" {
-  description = "管理アカウントのRoute53操作用クロスアカウントロールARN。CIロールにassume権限を与える対象。"
+variable "dns_account_id" {
+  description = "Route53 ホストゾーンを管理する AWS アカウントID（12桁）。実値は terraform.tfvars で渡す。"
   type        = string
-  default     = "arn:aws:iam::000000000000:role/TerraformRoute53CrossAccountRole"
 }

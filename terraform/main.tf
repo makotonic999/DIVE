@@ -72,7 +72,7 @@ provider "aws" {
   profile = var.dev_account_profile != "" ? var.dev_account_profile : null
 
   assume_role {
-    role_arn     = var.route53_cross_account_role_arn
+    role_arn     = local.route53_cross_account_role_arn
     session_name = "terraform-dive-route53"
   }
 
@@ -99,6 +99,10 @@ locals {
 
   # OACの識別名（サフィックス付きで一意化）
   oac_name = "${var.project_name}-${var.environment}-oac-${local.name_suffix}"
+
+  # 管理アカウントのRoute53操作用クロスアカウントロールARN。
+  # 実アカウントIDはコミットしないため dns_account_id から組み立てる。
+  route53_cross_account_role_arn = "arn:aws:iam::${var.dns_account_id}:role/TerraformRoute53CrossAccountRole"
 }
 
 # リソース名の一意化に使うランダムID。
